@@ -57,6 +57,8 @@ namespace wirefish::packet {
     // PRIVATE Functions
     void Packet::process_ethernet(std::stringstream &output) {
 
+        (void) output;
+
         /*if(m_length < sizeof(struct ethhdr)) {
 
             return ;
@@ -95,6 +97,8 @@ namespace wirefish::packet {
 
     void Packet::process_ipv4(std::stringstream &output) {
 
+        (void) output;
+
         /*if( m_length < (sizeof(struct ethhdr) + sizeof(struct ip)) ) {
 
             return ;
@@ -128,6 +132,8 @@ namespace wirefish::packet {
 
     void Packet::process_ipv6(std::stringstream &output) {
 
+        (void) output;
+
         /*if(m_length < (sizeof(struct ethhdr) + sizeof(struct ip6_hdr))) {
 
             return ;
@@ -158,6 +164,8 @@ namespace wirefish::packet {
 
     void Packet::process_udp(std::stringstream &output) {
 
+        (void) output;
+
         /*size_t _ip_hdr_size = (ip_protocol ? sizeof(struct iphdr) : sizeof(struct ip6_hdr) );
 
         if( m_length < (sizeof(struct ethhdr) + _ip_hdr_size + sizeof(struct udphdr)) ) {
@@ -179,6 +187,7 @@ namespace wirefish::packet {
 
     void Packet::process_tcp(std::stringstream &output) {
 
+        (void) output;
         /*size_t _ip_hdr_size = (ip_protocol ? sizeof(struct iphdr) : sizeof(struct ip6_hdr) );
 
         if( m_length < (sizeof(struct ethhdr) + _ip_hdr_size + sizeof(struct tcphdr)) ) {

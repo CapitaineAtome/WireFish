@@ -13,14 +13,6 @@
 #include <string>
 #include <sstream>
 
-#include <arpa/inet.h>
-
-#include <netinet/ether.h>
-#include <netinet/ip.h>
-#include <netinet/ip6.h>
-#include <netinet/tcp.h>
-#include <netinet/udp.h>
-
 namespace wirefish::packet {
 
     class Packet {
@@ -46,11 +38,6 @@ namespace wirefish::packet {
     private:
         char m_buffer[UINT16_MAX]{};
         size_t m_length{};
-
-        struct ethhdr m_eth;
-        std::variant<struct ip, struct ip6_hdr> ip;
-        struct udphdr m_udp;
-        struct tcphdr m_tcp;
     };
 
 } // wirefish::packet
