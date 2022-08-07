@@ -41,7 +41,7 @@ namespace wirefish::net {
         return *this;
     }
 
-    void inline Packet::setRaw(const char *buffer, const size_t length) {
+    void Packet::setRaw(const char *buffer, const size_t length) {
 
         size_t _nbr_bytes_copy{std::min(sizeof(m_buffer) / sizeof(*m_buffer) - 1U,
                                         length - 1U)};
