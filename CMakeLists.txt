@@ -16,4 +16,9 @@ add_executable(${PROJECT_NAME}
         sources/main.cpp
         sources/net/interface.cpp
         sources/net/device.cpp
-        sources/packet/packet.cpp)
+        sources/packet/packet.cpp
+        sources/protocol/ethernet.cpp
+        sources/protocol/ipv4.cpp
+        sources/protocol/ipv6.cpp
+        sources/protocol/tcp.cpp
+        sources/protocol/udp.cpp)

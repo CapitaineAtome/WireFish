@@ -27,7 +27,7 @@ namespace wirefish::net {
         Device &operator=(const Device &other)=delete;
         Device &operator=(Device &&other) noexcept;
 
-        void capture(Packet &raw_packet);
+        void capture(packet::Packet &raw_packet);
 
         [[nodiscard]] int getLastError() const noexcept;
 

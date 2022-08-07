@@ -63,7 +63,7 @@ namespace wirefish::net {
         return *this;
     }
 
-    void Device::capture(Packet &packet) {
+    void Device::capture(packet::Packet &packet) {
 
         struct sockaddr s_addr{};
         socklen_t s_addr_size = sizeof(struct sockaddr);
