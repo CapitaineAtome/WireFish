@@ -16,7 +16,7 @@
 namespace wirefish::protocol {
 
     class IPv6 {
-
+    public:
         enum class IPv6Error {
             NO_ERROR,
             BUFFER_TOO_SMALL

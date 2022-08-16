@@ -65,11 +65,11 @@ namespace wirefish::protocol {
         return *this;
     }
 
-    template<size_t length>
-    bool Ethernet::SourceAddress(char (&buffer)[length]) const {
+    bool Ethernet::SourceAddress(char *buffer, const size_t length) {
 
         if(length < ETH_ALEN) {
 
+            m_last_error = EthError::BUFFER_TOO_SMALL;
             return true;
         }
 
@@ -78,11 +78,11 @@ namespace wirefish::protocol {
         return false;
     }
 
-    template<size_t length>
-    bool Ethernet::DestinationAddress(char (&buffer)[length]) const {
+    bool Ethernet::DestinationAddress(char *buffer, const size_t length) {
 
         if(length < ETH_ALEN) {
 
+            m_last_error = EthError::BUFFER_TOO_SMALL;
             return true;
         }
 

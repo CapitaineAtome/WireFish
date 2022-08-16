@@ -8,7 +8,7 @@
 
 namespace wirefish::net {
 
-    Device::Device(std::string ifr) : m_interface{std::move(ifr)}, m_socket{}, m_last_error{}/*, m_buffer{}*/ {
+    Device::Device(std::string ifr) : m_interface{std::move(ifr)}, m_socket{}, m_last_error{DevError::NO_ERROR}, m_promiscuous{false}/*, m_buffer{}*/ {
 
         m_last_error = getPromiscuousSocket();
     }
@@ -25,6 +25,8 @@ namespace wirefish::net {
         m_socket = other.m_socket;
         m_last_error = other.m_last_error;
 
+        m_promiscuous = other.m_promiscuous;
+
         // size_t _max_byte_to_copy{std::min(sizeof(m_buffer) / sizeof(*m_buffer),
         //                                   sizeof(other.m_buffer) / sizeof(*other.m_buffer))};
         // memcpy(m_buffer, other.m_buffer, _max_byte_to_copy);
@@ -36,7 +38,13 @@ namespace wirefish::net {
         // memset(other.m_buffer, 0, sizeof(other.m_buffer) / sizeof(other.m_buffer[0]));
     }
 
-    Device::~Device()=default;
+    Device::~Device() {
+
+        if(m_promiscuous) {
+
+            close(m_socket);
+        }
+    };
 
     Device &Device::operator=(Device &&other) noexcept {
 
@@ -50,20 +58,23 @@ namespace wirefish::net {
         m_socket = other.m_socket;
         m_last_error = other.m_last_error;
 
+        m_promiscuous = other.m_promiscuous;
+
         // size_t _max_byte_to_copy{std::min(sizeof(m_buffer) / sizeof(*m_buffer),
         //                                   sizeof(other.m_buffer) / sizeof(*other.m_buffer))};
         // memcpy(m_buffer, other.m_buffer, _max_byte_to_copy);
 
         other.m_interface = "";
         other.m_socket = 0;
-        other.m_last_error = 0;
+        other.m_last_error = DevError::NO_ERROR;
+        other.m_promiscuous = false;
 
         // memset(other.m_buffer, 0, sizeof(other.m_buffer) / sizeof(other.m_buffer[0]));
 
         return *this;
     }
 
-    void Device::capture(packet::Packet &packet) {
+    Device::DevError Device::capture(packet::Packet &packet) {
 
         struct sockaddr s_addr{};
         socklen_t s_addr_size = sizeof(struct sockaddr);
@@ -71,38 +82,50 @@ namespace wirefish::net {
         char _buffer[UINT16_MAX]{};
 
         auto packet_size = recvfrom(m_socket, _buffer, sizeof(_buffer) / sizeof(*_buffer), 0, &s_addr, &s_addr_size);
+
+        m_last_error = DevError::NO_ERROR;
+
         if(packet_size < 0) {
 
             PRINT_ERROR("Failed to read a packet");
-            m_last_error = errno;
-            return ;
+            m_last_error = DevError::READ_PACKET_ERROR;
+
+            return m_last_error;
         }
 
         packet.setRaw(_buffer, sizeof(_buffer) / sizeof(*_buffer));
 
+        return m_last_error;
     }
 
-    int Device::getLastError() const noexcept {
+    Device::DevError Device::getLastError() const noexcept {
 
         return m_last_error;
     }
 
     // Private Functions
-    int Device::getPromiscuousSocket() {
+    Device::DevError Device::getPromiscuousSocket() {
 
-        int m_sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+        m_last_error = DevError::NO_ERROR;
 
-        if(m_sock == -1) {
+        m_socket = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 
-            return -(m_last_error = errno);
+        if(m_socket == -1) {
+
+            PRINT_ERROR("Could not create a RAW SOCKET");
+            m_last_error = DevError::SOCKET_CREATION_ERROR;
+
+            return m_last_error;
         }
 
         struct ifreq _ifr{};
-        strncpy((char*)_ifr.ifr_name, m_interface.c_str(), IF_NAMESIZE);
-        if(ioctl(m_sock, SIOCGIFINDEX, &_ifr) < 0) {
+        strncpy(static_cast<char*>(_ifr.ifr_name), m_interface.c_str(), IF_NAMESIZE);
+        if(ioctl(m_socket, SIOCGIFINDEX, &_ifr) < 0) {
 
-            close(m_sock);
-            return -(m_last_error = errno);
+            close(m_socket);
+            m_last_error = DevError::INTERFACE_SETTING_ERROR;
+
+            return m_last_error;
         }
 
         struct packet_mreq _mr{};
@@ -111,22 +134,26 @@ namespace wirefish::net {
         _mr.mr_ifindex = _ifr.ifr_ifindex;
         _mr.mr_type = PACKET_MR_PROMISC;
 
-        if(setsockopt(m_sock, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &_mr, sizeof(_mr)) < 0) {
+        if(setsockopt(m_socket, SOL_PACKET, PACKET_ADD_MEMBERSHIP, &_mr, sizeof(_mr)) < 0) {
 
-            close(m_sock);
+            close(m_socket);
+            m_last_error = DevError::INTERFACE_SETTING_ERROR;
 
-            m_last_error = errno;
-            return -errno;
+            return m_last_error;
         }
 
         _ifr.ifr_flags |= IFF_PROMISC;
-        if(ioctl(m_sock, SIOCSIFFLAGS, &_ifr) != 0) {
+        if(ioctl(m_socket, SIOCSIFFLAGS, &_ifr) != 0) {
 
-            close(m_sock);
-            return -(m_last_error = errno);
+            close(m_socket);
+            m_last_error = DevError::INTERFACE_SETTING_ERROR;
+
+            return m_last_error;
         }
 
-        return 0;
+        m_promiscuous = true;
+
+        return m_last_error;
     }
 
 } // wirefish::net

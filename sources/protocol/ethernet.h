@@ -30,11 +30,9 @@ namespace wirefish::protocol {
             Ethernet &operator=(const Ethernet &other);
             Ethernet &operator=(Ethernet &&other) noexcept;
 
-            template<size_t length>
-            bool SourceAddress(char (&buffer)[length]) const;
+            bool SourceAddress(char *buffer, size_t length);
 
-            template<size_t length>
-            bool DestinationAddress(char (&buffer)[length]) const;
+            bool DestinationAddress(char *buffer, size_t length);
 
             [[nodiscard]] unsigned short IPProtocol() const noexcept;
 

@@ -8,15 +8,30 @@
 #include <cstring>
 #include <cstdint>
 
-#include <variant>
+#include <optional>
 
 #include <string>
 #include <sstream>
+
+#include "../protocol/ethernet.h"
+#include "../protocol/ipv4.h"
+#include "../protocol/ipv6.h"
+#include "../protocol/tcp.h"
+#include "../protocol/udp.h"
 
 namespace wirefish::packet {
 
     class Packet {
     public:
+
+        enum class PacketType {
+            ETHERNET,
+            IPV4,
+            IPV6,
+            TCP,
+            UDP,
+        };
+
         Packet();
         Packet(const Packet &other)=delete;
         Packet(Packet &&other) noexcept;
@@ -26,7 +41,14 @@ namespace wirefish::packet {
         Packet &operator=(Packet &&other) noexcept;
 
         void setRaw(const char *buffer, size_t length);
-        void parse();
+
+        std::optional<protocol::Ethernet> GetEthernet();
+        std::optional<protocol::IPv4> GetIPv4();
+        std::optional<protocol::IPv6> GetIPv6();
+        std::optional<protocol::TCP> GetTCP();
+        std::optional<protocol::UDP> GetUDP();
+
+        bool isOfType(PacketType type);
 
     private:
         void process_ethernet(std::stringstream &output);

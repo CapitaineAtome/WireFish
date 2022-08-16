@@ -18,6 +18,13 @@
 namespace wirefish::net {
     class Device {
     public:
+
+        enum class DevError {
+            NO_ERROR,
+            SOCKET_CREATION_ERROR,
+            READ_PACKET_ERROR,
+            INTERFACE_SETTING_ERROR,
+        };
         explicit Device(std::string ifr);
 
         Device(Device &other)=delete;
@@ -27,17 +34,19 @@ namespace wirefish::net {
         Device &operator=(const Device &other)=delete;
         Device &operator=(Device &&other) noexcept;
 
-        void capture(packet::Packet &raw_packet);
+        [[nodiscard]] DevError capture(packet::Packet &raw_packet);
 
-        [[nodiscard]] int getLastError() const noexcept;
+        [[nodiscard]] DevError getLastError() const noexcept;
 
     private:
-        int getPromiscuousSocket();
+        DevError getPromiscuousSocket();
 
     private:
         std::string m_interface{};
         int m_socket{};
-        int m_last_error{};
+        DevError m_last_error{};
+
+        bool m_promiscuous{false};
 
         // char m_buffer[UINT16_MAX]{};
     };

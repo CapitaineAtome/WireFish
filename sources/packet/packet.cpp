@@ -50,8 +50,92 @@ namespace wirefish::packet {
         m_buffer[sizeof(m_buffer) / sizeof(*m_buffer) - 1] = '\0';
     }
 
-    void Packet::parse() {
+    std::optional<protocol::Ethernet> Packet::GetEthernet() {
 
+        return std::optional<protocol::Ethernet>{protocol::Ethernet{m_buffer, m_length}};
+    }
+    std::optional<protocol::IPv4> Packet::GetIPv4() {
+
+        return std::optional<protocol::IPv4>{protocol::IPv4{m_buffer, m_length}};
+    }
+    std::optional<protocol::IPv6> Packet::GetIPv6() {
+
+        return std::optional<protocol::IPv6>{protocol::IPv6{m_buffer, m_length}};
+    }
+    std::optional<protocol::TCP> Packet::GetTCP() {
+
+        return std::optional<protocol::TCP>{protocol::TCP{m_buffer, m_length}};
+    }
+    std::optional<protocol::UDP> Packet::GetUDP() {
+
+        return std::optional<protocol::UDP>{protocol::UDP{m_buffer, m_length}};
+    }
+
+    bool Packet::isOfType(const PacketType type) {
+
+        bool _ret{false};
+
+        switch(type) {
+            case PacketType::ETHERNET:
+
+                if(GetEthernet().has_value()) {
+
+                    _ret = true;
+                }
+
+                break;
+
+            case PacketType::IPV4:
+
+                if(GetEthernet().has_value()) {
+
+                    _ret = GetEthernet().value().IsIPv4();
+                }
+
+                return false;
+
+                break;
+
+            case PacketType::IPV6:
+
+                if(GetEthernet().has_value()) {
+
+                    _ret = GetEthernet().value().IsIPv6();
+
+                }
+
+                break;
+
+            case PacketType::TCP:
+
+                if(GetEthernet().has_value()) {
+
+                    if(GetEthernet().value().IsIPv4()) {
+
+                        _ret = GetIPv4().value().Protocol() == IPPROTO_TCP;
+                    }
+
+                }
+
+                break;
+
+        case PacketType::UDP:
+
+                if(GetEthernet().has_value()) {
+
+                    if(GetEthernet().value().IsIPv4()) {
+
+                        _ret = GetIPv4().value().Protocol() == IPPROTO_UDP;
+                    }
+                }
+
+                break;
+
+            default:
+                break;
+        }
+
+        return _ret;
     }
 
     // PRIVATE Functions
